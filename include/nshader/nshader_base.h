@@ -24,6 +24,12 @@ SOFTWARE.
 
 #ifndef NSHADER_BASE_H
 #define NSHADER_BASE_H
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <stdint.h>
+#include <stdbool.h>
 
 // #############################################################################
 // NSHADER_API macro for shared library symbol visibility
@@ -46,22 +52,32 @@ SOFTWARE.
 #endif
 
 // #############################################################################
-// C++ compatibility
+// Memory allocator
 // #############################################################################
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+// Memory functions called within the library, they can be overriden by the user.
+NSHADER_API void* nshader_malloc(size_t size);
+NSHADER_API void  nshader_free(void* ptr);
+NSHADER_API void* nshader_calloc(size_t num, size_t size);
+NSHADER_API void* nshader_realloc(void* ptr, size_t new_size);
+
+// Function pointer types for custom memory functions.
+typedef void* (*nshader_malloc_fn)(size_t size);
+typedef void  (*nshader_free_fn)(void* ptr);
+typedef void* (*nshader_calloc_fn)(size_t num, size_t size);
+typedef void* (*nshader_realloc_fn)(void* ptr, size_t new_size);
+
+// Set custom memory functions to be used by the library.
+// Not thread safe, should be called only once at the start of the program.
+NSHADER_API void nshader_set_memory_fns(
+  nshader_malloc_fn malloc_fn, 
+  nshader_free_fn free_fn, 
+  nshader_calloc_fn calloc_fn, 
+  nshader_realloc_fn realloc_fn);
 
 // #############################################################################
-// Libraries
-// #############################################################################
-
-#include <stdint.h>
-#include <stdbool.h>
 
 #ifdef __cplusplus
 }
 #endif
-
 #endif /* NSHADER_BASE_H */

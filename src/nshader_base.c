@@ -1,0 +1,68 @@
+/*
+MIT License
+
+Copyright (c) 2026 Christian Luppi
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+#include <nshader/nshader_base.h>
+#include <stdlib.h>
+
+// Stored function pointers for memory functions
+// They default to the standard library functions
+static nshader_malloc_fn g_malloc_fn = malloc;
+static nshader_free_fn g_free_fn = free;
+static nshader_calloc_fn g_calloc_fn = calloc;
+static nshader_realloc_fn g_realloc_fn = realloc;
+
+NSHADER_API void* nshader_malloc(size_t size) {
+    return g_malloc_fn(size);
+}
+
+NSHADER_API void  nshader_free(void* ptr) {
+    g_free_fn(ptr);
+}
+
+NSHADER_API void* nshader_calloc(size_t num, size_t size) {
+    return g_calloc_fn(num, size);
+}
+
+NSHADER_API void* nshader_realloc(void* ptr, size_t new_size) {
+    return g_realloc_fn(ptr, new_size);
+}
+
+NSHADER_API void nshader_set_memory_fns(
+  nshader_malloc_fn malloc_fn, 
+  nshader_free_fn free_fn, 
+  nshader_calloc_fn calloc_fn, 
+  nshader_realloc_fn realloc_fn) {
+    if (malloc_fn) {
+        g_malloc_fn = malloc_fn;
+    }
+    if (free_fn) {
+        g_free_fn = free_fn;
+    }
+    if (calloc_fn) {
+        g_calloc_fn = calloc_fn;
+    }
+    if (realloc_fn) {
+        g_realloc_fn = realloc_fn;
+    }
+  }
