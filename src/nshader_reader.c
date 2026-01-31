@@ -61,7 +61,11 @@ static char* read_string(const void** buffer, size_t* remaining) {
   uint32_t len = from_le32(len_le);
 
   if (len == 0) {
-    return NULL;
+    // Allocate empty string instead of returning NULL
+    char* str = (char*)nshader_malloc(1);
+    if (!str) return NULL;
+    str[0] = '\0';
+    return str;
   }
 
   char* str = (char*)nshader_malloc(len + 1);
@@ -80,6 +84,7 @@ static char* read_string(const void** buffer, size_t* remaining) {
 static bool read_binding(nshader_stage_binding_t* binding, const void** buffer, size_t* remaining) {
   uint32_t tmp;
   binding->name = read_string(buffer, remaining);
+  if (!binding->name) goto error;
   if (!read_data(&tmp, sizeof(tmp), buffer, remaining)) goto error;
   binding->location = from_le32(tmp);
   if (!read_data(&tmp, sizeof(tmp), buffer, remaining)) goto error;

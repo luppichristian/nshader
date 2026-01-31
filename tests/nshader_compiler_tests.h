@@ -22,23 +22,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "unity.h"
-#include <nshader.h>
+#pragma once
 
-void setUp(void) {
-    // Called before each test
-}
+#include <nshader/nshader_type.h>
 
-void tearDown(void) {
-    // Called after each test
-}
+// Global test state - compiled shaders used by info/writer/reader tests
+extern nshader_t* g_graphics_shader;
+extern nshader_t* g_compute_shader;
 
-// void test_nshader_test_should_return_true(void) {
-//     TEST_ASSERT_TRUE(nshader_test());
-// }
-
-int main(void) {
-    UNITY_BEGIN();
-    // RUN_TEST(test_nshader_test_should_return_true);
-    return UNITY_END();
-}
+void test_compile_graphics_shader(void);
+void test_compile_compute_shader(void);
+void test_compile_with_defines(void);
+void test_compile_invalid_shader(void);
+void nshader_compiler_tests_cleanup(void);
