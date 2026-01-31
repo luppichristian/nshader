@@ -26,12 +26,17 @@ SOFTWARE.
 
 #include <nshader/nshader_type.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Global test state - compiled shaders used by info/writer/reader tests
 extern nshader_t* g_graphics_shader;
 extern nshader_t* g_compute_shader;
 
-void test_compile_graphics_shader(void);
-void test_compile_compute_shader(void);
-void test_compile_with_defines(void);
-void test_compile_invalid_shader(void);
+void nshader_compiler_tests_setup(void);
 void nshader_compiler_tests_cleanup(void);
+
+#ifdef __cplusplus
+}
+#endif

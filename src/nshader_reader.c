@@ -51,7 +51,7 @@ static bool read_data(void* data, size_t size, const void** buffer, size_t* rema
 }
 
 // Helper macros for reading primitives (with endianness conversion)
-#define READ_U8(val) do { if (!read_data(&(val), sizeof(val), &buffer, &remaining)) goto error; } while(0)
+#define READ_U8(val) do { uint8_t tmp; if (!read_data(&tmp, sizeof(tmp), &buffer, &remaining)) goto error; (val) = tmp; } while(0)
 #define READ_U32(val) do { uint32_t tmp; if (!read_data(&tmp, sizeof(tmp), &buffer, &remaining)) goto error; (val) = from_le32(tmp); } while(0)
 #define READ_BYTES(ptr, len) do { if (!read_data((ptr), (len), &buffer, &remaining)) goto error; } while(0)
 

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.19)
-project(nshader VERSION 1.0.0 LANGUAGES C)
+project(nshader VERSION 1.0.0 LANGUAGES C CXX)
 
 #
 # Configuration Options
@@ -8,7 +8,7 @@ project(nshader VERSION 1.0.0 LANGUAGES C)
 option(NSHADER_BUILD_SHARED "Build nshader as a shared library" OFF)
 option(NSHADER_BUILD_TESTS "Build nshader tests" ON)
 option(NSHADER_BUILD_CLI "Build nshader command line interface" ON)
-option(NSHADER_UNITY_FETCH "Fetch Unity if not found" ON)
+option(NSHADER_GTEST_FETCH "Fetch GoogleTest if not found" ON)
 option(NSHADER_SHADERCROSS_FETCH "Fetch SDL_shadercross if not found" ON)
 
 #
@@ -18,6 +18,14 @@ option(NSHADER_SHADERCROSS_FETCH "Fetch SDL_shadercross if not found" ON)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
+
+#
+# C++ Standard (for tests)
+#
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 include(FetchContent)
 
@@ -86,7 +94,7 @@ file(GLOB_RECURSE NSHADER_HEADERS CONFIGURE_DEPENDS
 #
 
 file(GLOB_RECURSE NSHADER_TEST_SOURCES CONFIGURE_DEPENDS
-    ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp
 )
 
 #
@@ -194,16 +202,18 @@ endif()
 #
 
 if(NSHADER_BUILD_TESTS)
-    if(NSHADER_UNITY_FETCH)
-        message(STATUS "Fetching Unity test framework...")
+    if(NSHADER_GTEST_FETCH)
+        message(STATUS "Fetching GoogleTest framework...")
 
         FetchContent_Declare(
-            unity
-            GIT_REPOSITORY https://github.com/ThrowTheSwitch/Unity.git
-            GIT_TAG v2.6.0
+            googletest
+            GIT_REPOSITORY https://github.com/google/googletest.git
+            GIT_TAG v1.15.2
             GIT_SHALLOW TRUE
         )
-        FetchContent_MakeAvailable(unity)
+        # For Windows: Prevent overriding the parent project's compiler/linker settings
+        set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+        FetchContent_MakeAvailable(googletest)
     endif()
 
     enable_testing()
@@ -215,12 +225,13 @@ if(NSHADER_BUILD_TESTS)
     target_link_libraries(nshader-tests
         PRIVATE
             ${NSHADER_TARGET}
-            unity
+            GTest::gtest_main
     )
 
-    add_test(NAME nshader-tests COMMAND nshader-tests)
+    include(GoogleTest)
+    gtest_discover_tests(nshader-tests)
 
-    message(STATUS "Building tests with Unity")
+    message(STATUS "Building tests with GoogleTest")
 endif()
 
 #

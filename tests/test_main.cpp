@@ -22,10 +22,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#pragma once
+#include <gtest/gtest.h>
+#include "nshader_compiler_tests.h"
 
-void test_get_shader_info(void);
-void test_has_backend(void);
-void test_has_stage(void);
-void test_get_blob(void);
-void test_compute_shader_metadata(void);
+class NShaderTestEnvironment : public ::testing::Environment {
+public:
+    ~NShaderTestEnvironment() override {}
+
+    void SetUp() override {
+        nshader_compiler_tests_setup();
+    }
+
+    void TearDown() override {
+        nshader_compiler_tests_cleanup();
+    }
+};
+
+int main(int argc, char **argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    ::testing::AddGlobalTestEnvironment(new NShaderTestEnvironment);
+    return RUN_ALL_TESTS();
+}

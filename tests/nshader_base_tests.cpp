@@ -22,9 +22,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "unity.h"
-#include <nshader/nshader_base.h>
-#include <stdlib.h>
+#include <gtest/gtest.h>
+#include <cstdlib>
+
+extern "C" {
+    #include <nshader/nshader_base.h>
+}
 
 static size_t g_malloc_count = 0;
 static size_t g_free_count = 0;
@@ -50,7 +53,7 @@ static void* test_realloc(void* ptr, size_t new_size) {
     return realloc(ptr, new_size);
 }
 
-void test_custom_memory_allocator(void) {
+TEST(NShaderBaseTests, CustomMemoryAllocator) {
     // Note: This test should be run in isolation as it changes global state
     // Set custom allocators
     nshader_set_memory_fns(test_malloc, test_free, test_calloc, test_realloc);
@@ -60,11 +63,11 @@ void test_custom_memory_allocator(void) {
 
     // Allocate and free some memory
     void* ptr = nshader_malloc(100);
-    TEST_ASSERT_NOT_NULL(ptr);
-    TEST_ASSERT_EQUAL(1, g_malloc_count);
+    EXPECT_NE(ptr, nullptr);
+    EXPECT_EQ(1u, g_malloc_count);
 
     nshader_free(ptr);
-    TEST_ASSERT_EQUAL(1, g_free_count);
+    EXPECT_EQ(1u, g_free_count);
 
     // Reset to default allocators
     nshader_set_memory_fns(malloc, free, calloc, realloc);
