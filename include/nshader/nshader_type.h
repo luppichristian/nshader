@@ -34,13 +34,13 @@ NSHADER_HEADER_BEGIN;
 typedef struct nshader_t nshader_t;
 
 typedef struct nshader_blob_t {
-  size_t size;                
-  const uint8_t* data;        
+  size_t size;
+  const uint8_t* data;
 } nshader_blob_t;
 
 // Info getters & utility functions
 NSHADER_API const nshader_info_t* nshader_get_info(const nshader_t* shader);
-NSHADER_API const nshader_blob_t* nshader_get_blob(const nshader_t* shader, nshader_stage_t stage, nshader_backend_t backend);
+NSHADER_API const nshader_blob_t* nshader_get_blob(const nshader_t* shader, nshader_stage_type_t stage, nshader_backend_t backend);
 NSHADER_API bool nshader_has_backend(const nshader_t* shader, nshader_backend_t backend);
 NSHADER_API bool nshader_has_stage(const nshader_t* shader, nshader_stage_type_t stage_type);
 

@@ -135,9 +135,23 @@ target_include_directories(${NSHADER_TARGET}
 )
 
 #
-# Link SDL_shadercross
+# Link SDL3 and SDL_shadercross
 #
 
+# Link SDL3 as PUBLIC since we expose SDL3 GPU types in the API
+if(TARGET SDL3::SDL3-static)
+    target_link_libraries(${NSHADER_TARGET}
+        PRIVATE
+            SDL3::SDL3-static
+    )
+elseif(TARGET SDL3::SDL3)
+    target_link_libraries(${NSHADER_TARGET}
+        PRIVATE
+            SDL3::SDL3
+    )
+endif()
+
+# Link SDL_shadercross as PRIVATE since it's only used internally
 if(TARGET SDL3_shadercross::SDL3_shadercross)
     target_link_libraries(${NSHADER_TARGET}
         PRIVATE

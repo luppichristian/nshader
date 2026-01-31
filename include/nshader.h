@@ -25,6 +25,10 @@ SOFTWARE.
 #pragma once
 #include "nshader/nshader_base.h"
 #include "nshader/nshader_info.h"
-#include "nshader/nshader_type.h"
 #include "nshader/nshader_reader.h"
+#include "nshader/nshader_type.h"
 #include "nshader/nshader_writer.h"
+
+#ifdef NSHADER_SDL3_GPU
+#  include "nshader/nshader_sdl3_gpu.h"
+#endif

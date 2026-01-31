@@ -27,10 +27,6 @@ SOFTWARE.
 #include <nshader/nshader_base.h>
 #include <string.h>
 
-// Binary format constants
-#define NSHADER_MAGIC 0x5244534E  // "NSDR" in little-endian
-#define NSHADER_VERSION 1
-
 // Endianness conversion helpers - always read as little-endian
 static uint32_t from_le32(uint32_t val) {
 #if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__

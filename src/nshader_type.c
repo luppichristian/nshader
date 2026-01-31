@@ -28,16 +28,16 @@ NSHADER_API const nshader_info_t* nshader_get_info(const nshader_t* shader) {
   return shader ? &shader->info : NULL;
 }
 
-NSHADER_API const nshader_blob_t* nshader_get_blob(const nshader_t* shader, nshader_stage_t stage, nshader_backend_t backend) {
+NSHADER_API const nshader_blob_t* nshader_get_blob(const nshader_t* shader, nshader_stage_type_t stage_type, nshader_backend_t backend) {
   if(!shader) {
     return NULL;
   }
 
-  if(stage.type >= NSHADER_STAGE_TYPE_COUNT || backend >= NSHADER_BACKEND_COUNT) {
+  if(stage_type >= NSHADER_STAGE_TYPE_COUNT || backend >= NSHADER_BACKEND_COUNT) {
     return NULL;
   }
 
-  return shader->blobs[stage.type][backend];
+  return shader->blobs[stage_type][backend];
 }
 
 NSHADER_API bool nshader_has_backend(const nshader_t* shader, nshader_backend_t backend) {

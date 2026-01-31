@@ -66,6 +66,16 @@ NSHADER_HEADER_BEGIN;
 #endif
 
 // #############################################################################
+// Binary format constants
+// #############################################################################
+
+// Magic number for nshader binary format: "NSDR" in little-endian
+#define NSHADER_MAGIC 0x5244534E
+
+// Current version of the nshader binary format
+#define NSHADER_VERSION 1
+
+// #############################################################################
 // Memory allocator
 // #############################################################################
 
@@ -84,9 +94,9 @@ typedef void* (*nshader_realloc_fn)(void* ptr, size_t new_size);
 // Set custom memory functions to be used by the library.
 // Not thread safe, should be called only once at the start of the program.
 NSHADER_API void nshader_set_memory_fns(
-  nshader_malloc_fn malloc_fn, 
-  nshader_free_fn free_fn, 
-  nshader_calloc_fn calloc_fn, 
+  nshader_malloc_fn malloc_fn,
+  nshader_free_fn free_fn,
+  nshader_calloc_fn calloc_fn,
   nshader_realloc_fn realloc_fn);
 
 // #############################################################################
