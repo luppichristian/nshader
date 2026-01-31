@@ -22,11 +22,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef NSHADER_BASE_H
-#define NSHADER_BASE_H
+#pragma once
+
+// #############################################################################
+// NSHADER_HEADER utilities
+// #############################################################################
+
 #ifdef __cplusplus
-extern "C" {
+#define NSHADER_HEADER_BEGIN  extern "C" {
+#define NSHADER_HEADER_END    }
+#else
+#define NSHADER_HEADER_BEGIN
+#define NSHADER_HEADER_END
 #endif
+
+// #############################################################################
+NSHADER_HEADER_BEGIN;
+// #############################################################################
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -76,8 +88,5 @@ NSHADER_API void nshader_set_memory_fns(
   nshader_realloc_fn realloc_fn);
 
 // #############################################################################
-
-#ifdef __cplusplus
-}
-#endif
-#endif /* NSHADER_BASE_H */
+NSHADER_HEADER_END;
+// #############################################################################
