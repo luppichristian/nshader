@@ -24,29 +24,31 @@ SOFTWARE.
 
 #pragma once
 
-#include "nshader_type.h"
+#include <nshader/nshader_info.h>
+#include <SDL3_shadercross/SDL_shadercross.h>
 
 // #############################################################################
 NSHADER_HEADER_BEGIN;
 // #############################################################################
 
-// Read nshader from memory buffer
-// Returns nshader_t* on success, NULL on failure
-// Caller must free returned shader with nshader_destroy()
-NSHADER_API nshader_t* nshader_read_from_memory(const void* buffer, size_t buffer_size);
+// Type mapping: SDL_shadercross -> nshader
+NSHADER_API nshader_binding_type_t nshader_from_sdl_iovar_type(SDL_ShaderCross_IOVarType sdl_type);
+NSHADER_API nshader_stage_type_t nshader_from_sdl_shader_stage(SDL_ShaderCross_ShaderStage sdl_stage);
 
-// Read nshader from FILE*
-// Returns nshader_t* on success, NULL on failure
-// Caller must free returned shader with nshader_destroy()
-NSHADER_API nshader_t* nshader_read_from_file(FILE* file);
+// Type mapping: nshader -> SDL_shadercross
+NSHADER_API SDL_ShaderCross_IOVarType nshader_to_sdl_iovar_type(nshader_binding_type_t nshader_type);
+NSHADER_API SDL_ShaderCross_ShaderStage nshader_to_sdl_shader_stage(nshader_stage_type_t nshader_stage);
 
-// Read nshader from filepath
-// Returns nshader_t* on success, NULL on failure
-// Caller must free returned shader with nshader_destroy()
-NSHADER_API nshader_t* nshader_read_from_path(const char* filepath);
+// Convert SDL_shadercross graphics shader metadata to nshader stage metadata
+NSHADER_API bool nshader_from_sdl_graphics_metadata(
+  const SDL_ShaderCross_GraphicsShaderMetadata* sdl_metadata,
+  nshader_stage_type_t stage_type,
+  nshader_stage_metadata_t* nshader_metadata);
 
-// Destroy nshader and free all associated memory
-NSHADER_API void nshader_destroy(nshader_t* shader);
+// Convert SDL_shadercross compute metadata to nshader stage metadata
+NSHADER_API bool nshader_from_sdl_compute_metadata(
+  const SDL_ShaderCross_ComputePipelineMetadata* sdl_metadata,
+  nshader_stage_metadata_t* nshader_metadata);
 
 // #############################################################################
 NSHADER_HEADER_END;

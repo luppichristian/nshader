@@ -30,6 +30,19 @@ SOFTWARE.
 NSHADER_HEADER_BEGIN;
 // #############################################################################
 
+// Write nshader to memory buffer
+// Returns size written on success, 0 on failure
+// If buffer is NULL, only calculates size needed
+NSHADER_API size_t nshader_write_to_memory(const nshader_t* shader, void* buffer, size_t buffer_size);
+
+// Write nshader to FILE*
+// Returns true on success, false on failure
+NSHADER_API bool nshader_write_to_file(const nshader_t* shader, FILE* file);
+
+// Write nshader to filepath
+// Returns true on success, false on failure
+NSHADER_API bool nshader_write_to_path(const nshader_t* shader, const char* filepath);
+
 // #############################################################################
 NSHADER_HEADER_END;
 // #############################################################################

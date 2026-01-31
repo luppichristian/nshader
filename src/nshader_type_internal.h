@@ -26,7 +26,15 @@ SOFTWARE.
 
 #include <nshader/nshader_type.h>
 
+// #############################################################################
+NSHADER_HEADER_BEGIN;
+// #############################################################################
+
 typedef struct nshader_t {
   nshader_info_t info;
   nshader_blob_t* blobs[NSHADER_STAGE_TYPE_COUNT][NSHADER_BACKEND_COUNT];
 } nshader_t;
+
+// #############################################################################
+NSHADER_HEADER_END;
+// #############################################################################
