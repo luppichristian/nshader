@@ -161,15 +161,6 @@ NSHADER_API SDL_GPUShader* nshader_sdl3_gpu_create_shader(
   return SDL_CreateGPUShader(device, &create_info);
 }
 
-NSHADER_API void nshader_sdl3_gpu_release_shader(
-  SDL_GPUDevice* device,
-  SDL_GPUShader* gpu_shader)
-{
-  if (device && gpu_shader) {
-    SDL_ReleaseGPUShader(device, gpu_shader);
-  }
-}
-
 NSHADER_API SDL_GPUComputePipeline* nshader_sdl3_gpu_create_compute_pipeline(
   SDL_GPUDevice* device,
   const nshader_t* shader)
@@ -228,13 +219,4 @@ NSHADER_API SDL_GPUComputePipeline* nshader_sdl3_gpu_create_compute_pipeline(
 
   // Create the SDL GPU compute pipeline
   return SDL_CreateGPUComputePipeline(device, &create_info);
-}
-
-NSHADER_API void nshader_sdl3_gpu_release_compute_pipeline(
-  SDL_GPUDevice* device,
-  SDL_GPUComputePipeline* compute_pipeline)
-{
-  if (device && compute_pipeline) {
-    SDL_ReleaseGPUComputePipeline(device, compute_pipeline);
-  }
 }

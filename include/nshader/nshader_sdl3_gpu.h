@@ -42,11 +42,6 @@ NSHADER_API SDL_GPUShader* nshader_sdl3_gpu_create_shader(
   const nshader_t* shader,
   nshader_stage_type_t stage_type);
 
-// Releases an SDL_GPUShader created by nshader_sdl3_gpu_create_shader().
-NSHADER_API void nshader_sdl3_gpu_release_shader(
-  SDL_GPUDevice* device,
-  SDL_GPUShader* gpu_shader);
-
 // Creates an SDL_GPUComputePipeline from an nshader.
 // Automatically selects the appropriate shader backend (DXIL, DXBC, MSL, SPV)
 // based on the device's supported shader formats.
@@ -56,11 +51,6 @@ NSHADER_API void nshader_sdl3_gpu_release_shader(
 NSHADER_API SDL_GPUComputePipeline* nshader_sdl3_gpu_create_compute_pipeline(
   SDL_GPUDevice* device,
   const nshader_t* shader);
-
-// Releases an SDL_GPUComputePipeline created by nshader_sdl3_gpu_create_compute_pipeline().
-NSHADER_API void nshader_sdl3_gpu_release_compute_pipeline(
-  SDL_GPUDevice* device,
-  SDL_GPUComputePipeline* compute_pipeline);
 
 // #############################################################################
 NSHADER_HEADER_END;

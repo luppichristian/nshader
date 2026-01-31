@@ -64,7 +64,7 @@ elseif(NSHADER_SHADERCROSS_FETCH)
     FetchContent_Declare(
         SDL_shadercross
         GIT_REPOSITORY https://github.com/libsdl-org/SDL_shadercross.git
-        GIT_TAG main
+        GIT_TAG 7b7365a86611b2a7b6462e521cf1c43a037d0970
         GIT_SHALLOW TRUE
     )
     FetchContent_MakeAvailable(SDL_shadercross)
