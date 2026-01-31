@@ -23,5 +23,10 @@ SOFTWARE.
 */
 
 #pragma once
-#include "nshader/nshader_base.h"
-#include "nshader/nshader_type.h"
+
+#include <nshader/nshader_type.h>
+
+typedef struct nshader_t {
+  nshader_info_t info;
+  nshader_blob_t* blobs[NSHADER_STAGE_TYPE_COUNT][NSHADER_BACKEND_COUNT];
+} nshader_t;

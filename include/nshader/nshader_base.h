@@ -42,6 +42,8 @@ NSHADER_HEADER_BEGIN;
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 // #############################################################################
 // NSHADER_API macro for shared library symbol visibility

@@ -22,6 +22,5 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#pragma once
-#include "nshader/nshader_base.h"
-#include "nshader/nshader_type.h"
+#include <nshader/nshader_reader.h>
+#include "nshader_type_internal.h"
