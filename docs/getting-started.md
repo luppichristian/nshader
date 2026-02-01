@@ -78,9 +78,19 @@ int main(void) {
 ## CLI Usage
 
 ```bash
-# Graphics shader with vertex + fragment
+# Graphics shader with vertex + fragment (single source file)
 nshader compile sprite.hlsl -o sprite.nshader \
     --vertex vs_main --fragment fs_main
+
+# Separate source files for vertex and fragment
+nshader compile --vertex vs_main --vertex-source vertex.hlsl \
+                --fragment fs_main --fragment-source fragment.hlsl \
+                -o sprite.nshader
+
+# Mixed: default source with override for fragment stage
+nshader compile common.hlsl -o sprite.nshader \
+    --vertex vs_main \
+    --fragment fs_main --fragment-source custom_pixel.hlsl
 
 # Compute shader with defines
 nshader compile blur.hlsl -o blur.nshader \
@@ -96,6 +106,32 @@ nshader info shader.nshader --verbose
 # Extract SPIR-V for debugging
 nshader extract shader.nshader spv vertex -o debug.spv
 ```
+
+### Source File Options
+
+Each shader stage can have its own source file:
+
+| Option | Description |
+|--------|-------------|
+| `<input.hlsl>` | Default source file for all stages |
+| `--vertex-source <file>` | Source file for vertex shader (overrides default) |
+| `--fragment-source <file>` | Source file for fragment shader (overrides default) |
+| `--compute-source <file>` | Source file for compute shader (overrides default) |
+
+Each active stage requires a source from either the default input file or its stage-specific `--*-source` flag.
+
+### Preprocessor Defines
+
+Defines can be applied globally or per-stage:
+
+| Option | Description |
+|--------|-------------|
+| `-D <NAME[=VALUE]>` | Global define (all stages) |
+| `--D-vertex <NAME[=VALUE]>` | Vertex stage only |
+| `--D-fragment <NAME[=VALUE]>` | Fragment stage only |
+| `--D-compute <NAME[=VALUE]>` | Compute stage only |
+
+See the [CLI Reference](cli.md) for complete documentation.
 
 ## Pitfalls
 

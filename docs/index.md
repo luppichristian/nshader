@@ -45,6 +45,7 @@ nshader_destroy(shader);
 ## Documentation
 
 - [Getting Started](getting-started.md) - Build, usage, pitfalls
+- [CLI Reference](cli.md) - Command-line tool documentation
 
 ### Header Reference
 

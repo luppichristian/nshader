@@ -108,25 +108,48 @@ static void print_help(void) {
 static void print_compile_help(void) {
   printf("nshader compile - Compile HLSL shader to nshader format\n\n");
   printf("USAGE:\n");
-  printf("  nshader compile <input.hlsl> -o <output.nshader> [options]\n\n");
+  printf("  nshader compile [<input.hlsl>] -o <output.nshader> [options]\n\n");
   printf("REQUIRED:\n");
-  printf("  <input.hlsl>          Input HLSL shader file\n");
   printf("  -o <output.nshader>   Output nshader file\n\n");
+  printf("SOURCE FILES:\n");
+  printf("  <input.hlsl>              Default input file for all stages\n");
+  printf("  --vertex-source <file>    Source file for vertex shader (overrides default)\n");
+  printf("  --fragment-source <file>  Source file for fragment shader (overrides default)\n");
+  printf("  --compute-source <file>   Source file for compute shader (overrides default)\n\n");
+  printf("  Each stage needs a source from either <input.hlsl> or its --*-source flag.\n\n");
   printf("SHADER STAGES:\n");
   printf("  --vertex <entry>      Vertex shader entry point\n");
   printf("  --fragment <entry>    Fragment shader entry point\n");
   printf("  --compute <entry>     Compute shader entry point\n\n");
   printf("OPTIONS:\n");
-  printf("  -D <NAME[=VALUE]>     Add preprocessor define\n");
-  printf("  -I <directory>        Include directory for shader code\n");
-  printf("  --debug               Enable debug information\n");
-  printf("  --debug-name <name>   Set debug name\n");
-  printf("  --preserve-bindings   Don't cull unused resource bindings\n\n");
+  printf("  -D <NAME[=VALUE]>         Add preprocessor define (applies to all stages)\n");
+  printf("  --D-vertex <NAME[=VALUE]>   Add define for vertex stage only\n");
+  printf("  --D-fragment <NAME[=VALUE]> Add define for fragment stage only\n");
+  printf("  --D-compute <NAME[=VALUE]>  Add define for compute stage only\n");
+  printf("  -I <directory>            Include directory for shader code\n");
+  printf("  --debug                   Enable debug information\n");
+  printf("  --debug-name <name>       Set debug name\n");
+  printf("  --preserve-bindings       Don't cull unused resource bindings\n\n");
   printf("BACKEND CONTROL:\n");
   printf("  --disable-dxil        Disable DirectX IL backend\n");
   printf("  --disable-dxbc        Disable DirectX Bytecode backend\n");
   printf("  --disable-msl         Disable Metal Shading Language backend\n");
-  printf("  --disable-spv         Disable SPIR-V backend\n");
+  printf("  --disable-spv         Disable SPIR-V backend\n\n");
+  printf("EXAMPLES:\n");
+  printf("  # Single source for all stages (existing behavior)\n");
+  printf("  nshader compile shader.hlsl -o out.nshader --vertex VSMain --fragment PSMain\n\n");
+  printf("  # Separate source files for each stage\n");
+  printf("  nshader compile --vertex VSMain --vertex-source vertex.hlsl \\\n");
+  printf("                  --fragment PSMain --fragment-source fragment.hlsl \\\n");
+  printf("                  -o out.nshader\n\n");
+  printf("  # Default source with override for one stage\n");
+  printf("  nshader compile common.hlsl -o out.nshader \\\n");
+  printf("                  --vertex VSMain \\\n");
+  printf("                  --fragment PSMain --fragment-source custom_pixel.hlsl\n\n");
+  printf("  # Stage-specific defines\n");
+  printf("  nshader compile shader.hlsl -o out.nshader \\\n");
+  printf("                  --vertex VSMain --D-vertex INSTANCED=1 \\\n");
+  printf("                  --fragment PSMain --D-fragment USE_TEXTURES\n");
 }
 
 static void print_info_help(void) {
@@ -162,11 +185,23 @@ typedef struct compile_args_t {
   const char* vertex_entry;
   const char* fragment_entry;
   const char* compute_entry;
+  const char* vertex_source;
+  const char* fragment_source;
+  const char* compute_source;
   const char* include_dir;
   const char* debug_name;
 
   nshader_compiler_define_t* defines;
   size_t num_defines;
+
+  nshader_compiler_define_t* vertex_defines;
+  size_t num_vertex_defines;
+
+  nshader_compiler_define_t* fragment_defines;
+  size_t num_fragment_defines;
+
+  nshader_compiler_define_t* compute_defines;
+  size_t num_compute_defines;
 
   bool debug;
   bool preserve_bindings;
@@ -224,6 +259,24 @@ static int cmd_compile(int argc, char** argv) {
         return 1;
       }
       args.compute_entry = argv[i];
+    } else if (strcmp(argv[i], "--vertex-source") == 0) {
+      if (++i >= argc) {
+        fprintf(stderr, "Error: --vertex-source requires an argument\n");
+        return 1;
+      }
+      args.vertex_source = argv[i];
+    } else if (strcmp(argv[i], "--fragment-source") == 0) {
+      if (++i >= argc) {
+        fprintf(stderr, "Error: --fragment-source requires an argument\n");
+        return 1;
+      }
+      args.fragment_source = argv[i];
+    } else if (strcmp(argv[i], "--compute-source") == 0) {
+      if (++i >= argc) {
+        fprintf(stderr, "Error: --compute-source requires an argument\n");
+        return 1;
+      }
+      args.compute_source = argv[i];
     } else if (strcmp(argv[i], "-D") == 0) {
       if (++i >= argc) {
         fprintf(stderr, "Error: -D requires an argument\n");
@@ -237,6 +290,45 @@ static int cmd_compile(int argc, char** argv) {
       args.defines[args.num_defines].name = name;
       args.defines[args.num_defines].value = value;
       args.num_defines++;
+    } else if (strcmp(argv[i], "--D-vertex") == 0) {
+      if (++i >= argc) {
+        fprintf(stderr, "Error: --D-vertex requires an argument\n");
+        return 1;
+      }
+      args.vertex_defines = (nshader_compiler_define_t*)realloc(args.vertex_defines,
+        sizeof(nshader_compiler_define_t) * (args.num_vertex_defines + 1));
+
+      char* name, *value;
+      parse_define(argv[i], &name, &value);
+      args.vertex_defines[args.num_vertex_defines].name = name;
+      args.vertex_defines[args.num_vertex_defines].value = value;
+      args.num_vertex_defines++;
+    } else if (strcmp(argv[i], "--D-fragment") == 0) {
+      if (++i >= argc) {
+        fprintf(stderr, "Error: --D-fragment requires an argument\n");
+        return 1;
+      }
+      args.fragment_defines = (nshader_compiler_define_t*)realloc(args.fragment_defines,
+        sizeof(nshader_compiler_define_t) * (args.num_fragment_defines + 1));
+
+      char* name, *value;
+      parse_define(argv[i], &name, &value);
+      args.fragment_defines[args.num_fragment_defines].name = name;
+      args.fragment_defines[args.num_fragment_defines].value = value;
+      args.num_fragment_defines++;
+    } else if (strcmp(argv[i], "--D-compute") == 0) {
+      if (++i >= argc) {
+        fprintf(stderr, "Error: --D-compute requires an argument\n");
+        return 1;
+      }
+      args.compute_defines = (nshader_compiler_define_t*)realloc(args.compute_defines,
+        sizeof(nshader_compiler_define_t) * (args.num_compute_defines + 1));
+
+      char* name, *value;
+      parse_define(argv[i], &name, &value);
+      args.compute_defines[args.num_compute_defines].name = name;
+      args.compute_defines[args.num_compute_defines].value = value;
+      args.num_compute_defines++;
     } else if (strcmp(argv[i], "-I") == 0) {
       if (++i >= argc) {
         fprintf(stderr, "Error: -I requires an argument\n");
@@ -275,12 +367,6 @@ static int cmd_compile(int argc, char** argv) {
   }
 
   // Validate required arguments
-  if (!args.input_file) {
-    fprintf(stderr, "Error: Input file required\n");
-    print_compile_help();
-    return 1;
-  }
-
   if (!args.output_file) {
     fprintf(stderr, "Error: Output file (-o) required\n");
     print_compile_help();
@@ -293,11 +379,69 @@ static int cmd_compile(int argc, char** argv) {
     return 1;
   }
 
-  // Read source file
-  printf("Reading source: %s\n", args.input_file);
-  char* source = read_file_to_string(args.input_file);
-  if (!source) {
+  // Validate that each stage has a source file (either default or stage-specific)
+  if (args.vertex_entry && !args.input_file && !args.vertex_source) {
+    fprintf(stderr, "Error: Vertex stage requires a source file (use <input.hlsl> or --vertex-source)\n");
+    print_compile_help();
     return 1;
+  }
+
+  if (args.fragment_entry && !args.input_file && !args.fragment_source) {
+    fprintf(stderr, "Error: Fragment stage requires a source file (use <input.hlsl> or --fragment-source)\n");
+    print_compile_help();
+    return 1;
+  }
+
+  if (args.compute_entry && !args.input_file && !args.compute_source) {
+    fprintf(stderr, "Error: Compute stage requires a source file (use <input.hlsl> or --compute-source)\n");
+    print_compile_help();
+    return 1;
+  }
+
+  // Read source files
+  char* default_source = NULL;
+  char* vertex_source = NULL;
+  char* fragment_source = NULL;
+  char* compute_source = NULL;
+
+  // Read default source file if provided
+  if (args.input_file) {
+    printf("Reading source: %s\n", args.input_file);
+    default_source = read_file_to_string(args.input_file);
+    if (!default_source) {
+      return 1;
+    }
+  }
+
+  // Read stage-specific source files
+  if (args.vertex_source) {
+    printf("Reading vertex source: %s\n", args.vertex_source);
+    vertex_source = read_file_to_string(args.vertex_source);
+    if (!vertex_source) {
+      free(default_source);
+      return 1;
+    }
+  }
+
+  if (args.fragment_source) {
+    printf("Reading fragment source: %s\n", args.fragment_source);
+    fragment_source = read_file_to_string(args.fragment_source);
+    if (!fragment_source) {
+      free(default_source);
+      free(vertex_source);
+      return 1;
+    }
+  }
+
+  if (args.compute_source) {
+    printf("Reading compute source: %s\n", args.compute_source);
+    compute_source = read_file_to_string(args.compute_source);
+    if (!compute_source) {
+      free(default_source);
+      free(vertex_source);
+      free(fragment_source);
+      return 1;
+    }
   }
 
   // Build stage setups
@@ -307,27 +451,27 @@ static int cmd_compile(int argc, char** argv) {
   if (args.vertex_entry) {
     stages[num_stages].stage_type = NSHADER_STAGE_TYPE_VERTEX;
     stages[num_stages].entry_point = args.vertex_entry;
-    stages[num_stages].source_code = source;
-    stages[num_stages].defines = NULL;
-    stages[num_stages].num_defines = 0;
+    stages[num_stages].source_code = vertex_source ? vertex_source : default_source;
+    stages[num_stages].defines = args.vertex_defines;
+    stages[num_stages].num_defines = args.num_vertex_defines;
     num_stages++;
   }
 
   if (args.fragment_entry) {
     stages[num_stages].stage_type = NSHADER_STAGE_TYPE_FRAGMENT;
     stages[num_stages].entry_point = args.fragment_entry;
-    stages[num_stages].source_code = source;
-    stages[num_stages].defines = NULL;
-    stages[num_stages].num_defines = 0;
+    stages[num_stages].source_code = fragment_source ? fragment_source : default_source;
+    stages[num_stages].defines = args.fragment_defines;
+    stages[num_stages].num_defines = args.num_fragment_defines;
     num_stages++;
   }
 
   if (args.compute_entry) {
     stages[num_stages].stage_type = NSHADER_STAGE_TYPE_COMPUTE;
     stages[num_stages].entry_point = args.compute_entry;
-    stages[num_stages].source_code = source;
-    stages[num_stages].defines = NULL;
-    stages[num_stages].num_defines = 0;
+    stages[num_stages].source_code = compute_source ? compute_source : default_source;
+    stages[num_stages].defines = args.compute_defines;
+    stages[num_stages].num_defines = args.num_compute_defines;
     num_stages++;
   }
 
@@ -357,16 +501,36 @@ static int cmd_compile(int argc, char** argv) {
       fprintf(stderr, "  %s\n", errors.errors[i]);
     }
     nshader_error_list_free(&errors);
-    free(source);
+    free(default_source);
+    free(vertex_source);
+    free(fragment_source);
+    free(compute_source);
 
-    // Free defines
+    // Free global defines
     for (size_t i = 0; i < args.num_defines; i++) {
       free((char*)args.defines[i].name);
-      if (args.defines[i].value) {
-        free((char*)args.defines[i].value);
-      }
+      free((char*)args.defines[i].value);
     }
     free(args.defines);
+
+    // Free stage-specific defines
+    for (size_t i = 0; i < args.num_vertex_defines; i++) {
+      free((char*)args.vertex_defines[i].name);
+      free((char*)args.vertex_defines[i].value);
+    }
+    free(args.vertex_defines);
+
+    for (size_t i = 0; i < args.num_fragment_defines; i++) {
+      free((char*)args.fragment_defines[i].name);
+      free((char*)args.fragment_defines[i].value);
+    }
+    free(args.fragment_defines);
+
+    for (size_t i = 0; i < args.num_compute_defines; i++) {
+      free((char*)args.compute_defines[i].name);
+      free((char*)args.compute_defines[i].value);
+    }
+    free(args.compute_defines);
 
     return 1;
   }
@@ -380,16 +544,36 @@ static int cmd_compile(int argc, char** argv) {
   if (!success) {
     fprintf(stderr, "Error: Failed to write output file\n");
     nshader_destroy(shader);
-    free(source);
+    free(default_source);
+    free(vertex_source);
+    free(fragment_source);
+    free(compute_source);
 
-    // Free defines
+    // Free global defines
     for (size_t i = 0; i < args.num_defines; i++) {
       free((char*)args.defines[i].name);
-      if (args.defines[i].value) {
-        free((char*)args.defines[i].value);
-      }
+      free((char*)args.defines[i].value);
     }
     free(args.defines);
+
+    // Free stage-specific defines
+    for (size_t i = 0; i < args.num_vertex_defines; i++) {
+      free((char*)args.vertex_defines[i].name);
+      free((char*)args.vertex_defines[i].value);
+    }
+    free(args.vertex_defines);
+
+    for (size_t i = 0; i < args.num_fragment_defines; i++) {
+      free((char*)args.fragment_defines[i].name);
+      free((char*)args.fragment_defines[i].value);
+    }
+    free(args.fragment_defines);
+
+    for (size_t i = 0; i < args.num_compute_defines; i++) {
+      free((char*)args.compute_defines[i].name);
+      free((char*)args.compute_defines[i].value);
+    }
+    free(args.compute_defines);
 
     return 1;
   }
@@ -398,16 +582,36 @@ static int cmd_compile(int argc, char** argv) {
 
   // Cleanup
   nshader_destroy(shader);
-  free(source);
+  free(default_source);
+  free(vertex_source);
+  free(fragment_source);
+  free(compute_source);
 
-  // Free defines
+  // Free global defines
   for (size_t i = 0; i < args.num_defines; i++) {
     free((char*)args.defines[i].name);
-    if (args.defines[i].value) {
-      free((char*)args.defines[i].value);
-    }
+    free((char*)args.defines[i].value);
   }
   free(args.defines);
+
+  // Free stage-specific defines
+  for (size_t i = 0; i < args.num_vertex_defines; i++) {
+    free((char*)args.vertex_defines[i].name);
+    free((char*)args.vertex_defines[i].value);
+  }
+  free(args.vertex_defines);
+
+  for (size_t i = 0; i < args.num_fragment_defines; i++) {
+    free((char*)args.fragment_defines[i].name);
+    free((char*)args.fragment_defines[i].value);
+  }
+  free(args.fragment_defines);
+
+  for (size_t i = 0; i < args.num_compute_defines; i++) {
+    free((char*)args.compute_defines[i].name);
+    free((char*)args.compute_defines[i].value);
+  }
+  free(args.compute_defines);
 
   return 0;
 }
