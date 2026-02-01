@@ -1,3 +1,8 @@
+---
+layout: default
+title: nshader_info.h
+---
+
 # nshader_info.h
 
 Type definitions and metadata structures for shader reflection.

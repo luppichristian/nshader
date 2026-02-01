@@ -1,3 +1,8 @@
+---
+layout: default
+title: nshader_sdl3_gpu.h
+---
+
 # nshader_sdl3_gpu.h
 
 SDL3 GPU integration for creating shader and pipeline objects.

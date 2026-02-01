@@ -1,3 +1,8 @@
+---
+layout: default
+title: nshader_reader.h
+---
+
 # nshader_reader.h
 
 Deserialization of `.nshader` binary files to runtime objects.

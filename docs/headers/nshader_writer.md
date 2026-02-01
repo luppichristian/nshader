@@ -1,3 +1,8 @@
+---
+layout: default
+title: nshader_writer.h
+---
+
 # nshader_writer.h
 
 Serialization of `nshader_t` objects to binary format.

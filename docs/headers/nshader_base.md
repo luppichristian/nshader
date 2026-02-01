@@ -1,3 +1,8 @@
+---
+layout: default
+title: nshader_base.h
+---
+
 # nshader_base.h
 
 Foundation header providing memory allocation hooks and binary format constants.

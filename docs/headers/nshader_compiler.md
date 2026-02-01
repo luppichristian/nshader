@@ -1,3 +1,8 @@
+---
+layout: default
+title: nshader_compiler.h
+---
+
 # nshader_compiler.h
 
 HLSL shader compilation to multiple backends with reflection extraction.

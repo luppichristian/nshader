@@ -1,3 +1,8 @@
+---
+layout: default
+title: nshader_type.h
+---
+
 # nshader_type.h
 
 Core opaque type and accessor functions for shader objects.

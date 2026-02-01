@@ -30,8 +30,6 @@ Built on [SDL_shadercross](https://github.com/libsdl-org/SDL_shadercross) for sh
 
 ## Documentation
 
-## Documentation
-
 See [docs](https://luppichristian.github.io/nshader/) for comprehensive API documentation and usage patterns.
 
 ## License
