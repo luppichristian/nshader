@@ -27,6 +27,12 @@ jobs:
     - name: Set up CMake
       uses: lukka/get-cmake@latest
     
+    - name: Set up MSVC
+      if: runner.os == 'Windows'
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: x64
+    
     - name: Set up Ninja
       uses: seanmiddleditch/gha-setup-ninja@master
     
@@ -40,10 +46,21 @@ jobs:
           libjson-perl \
           libx11-dev \
           libxext-dev \
+          libxcursor-dev \
+          libxi-dev \
+          libxinerama-dev \
+          libxxf86vm-dev \
+          libxss-dev \
+          libxfixes-dev \
           libwayland-dev \
           libxkbcommon-dev \
           libegl1-mesa-dev \
-          libibus-1.0-dev
+          libibus-1.0-dev \
+          libdbus-1-dev \
+          libpulse-dev \
+          libasound2-dev \
+          libsamplerate0-dev \
+          libudev-dev
     
     - name: Install macOS dependencies
       if: runner.os == 'macOS'
