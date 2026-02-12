@@ -41,26 +41,37 @@ jobs:
       run: |
         sudo apt-get update -y
         sudo apt-get install -y \
-          patchelf \
-          libxrandr-dev \
-          libjson-perl \
+          build-essential \
+          pkg-config \
+          libasound2-dev \
+          libpulse-dev \
+          libaudio-dev \
+          libfribidi-dev \
+          libjack-dev \
+          libsndio-dev \
           libx11-dev \
           libxext-dev \
+          libxrandr-dev \
           libxcursor-dev \
-          libxi-dev \
-          libxinerama-dev \
-          libxxf86vm-dev \
-          libxss-dev \
           libxfixes-dev \
-          libwayland-dev \
+          libxi-dev \
+          libxss-dev \
+          libxtst-dev \
           libxkbcommon-dev \
+          libdrm-dev \
+          libgbm-dev \
+          libgl1-mesa-dev \
+          libgles2-mesa-dev \
           libegl1-mesa-dev \
-          libibus-1.0-dev \
           libdbus-1-dev \
-          libpulse-dev \
-          libasound2-dev \
-          libsamplerate0-dev \
-          libudev-dev
+          libibus-1.0-dev \
+          libudev-dev \
+          libthai-dev \
+          libpipewire-0.3-dev \
+          libwayland-dev \
+          libdecor-0-dev \
+          patchelf \
+          libjson-perl
     
     - name: Install macOS dependencies
       if: runner.os == 'macOS'
