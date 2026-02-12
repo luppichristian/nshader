@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    name: ${{ matrix.os }} - ${{ matrix.build_type }}
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        build_type: [Debug, Release]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    
+    - name: Set up CMake
+      uses: lukka/get-cmake@latest
+    
+    - name: Set up Ninja
+      uses: seanmiddleditch/gha-setup-ninja@master
+    
+    - name: Install Linux dependencies
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y \
+          patchelf \
+          libxrandr-dev \
+          libjson-perl \
+          libx11-dev \
+          libxext-dev \
+          libwayland-dev \
+          libxkbcommon-dev \
+          libegl1-mesa-dev \
+          libibus-1.0-dev
+    
+    - name: Install macOS dependencies
+      if: runner.os == 'macOS'
+      run: |
+        brew install bison cpanm ninja
+        echo "/opt/homebrew/opt/bison/bin" >> $GITHUB_PATH
+        cpanm install JSON
+    
+    - name: Configure CMake
+      run: |
+        cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DNSHADER_BUILD_TESTS=ON
+    
+    - name: Build
+      run: cmake --build build
+    
+    - name: Run tests
+      working-directory: build
+      run: ctest --output-on-failure --verbose
+    
+    - name: Upload test results on failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-${{ matrix.os }}-${{ matrix.build_type }}
+        path: |
+          build/Testing/Temporary/LastTest.log
+          build/Testing/Temporary/LastTestsFailed.log
+        if-no-files-found: ignore
