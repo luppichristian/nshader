@@ -24,7 +24,7 @@ SOFTWARE.
 
 #pragma once
 
-#include "nshader_type.h"
+#include <nshader/nshader_type.h>
 
 /*
  * Shader resource bindings must be authored to follow a particular order

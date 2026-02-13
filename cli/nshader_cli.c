@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 #include <nshader.h>
+#include <nshader/nshader_compiler.h>
 
 #include <stdio.h>
 #include <stdlib.h>
