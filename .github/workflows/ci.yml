@@ -36,6 +36,24 @@ jobs:
     - name: Set up Ninja
       uses: seanmiddleditch/gha-setup-ninja@master
     
+    - name: Cache CMake dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          build/_deps
+        key: ${{ runner.os }}-cmake-deps-${{ hashFiles('**/CMakeLists.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-cmake-deps-
+    
+    - name: Cache apt packages
+      if: runner.os == 'Linux'
+      uses: actions/cache@v4
+      with:
+        path: /var/cache/apt/archives
+        key: ${{ runner.os }}-apt-${{ hashFiles('.github/workflows/ci.yml') }}
+        restore-keys: |
+          ${{ runner.os }}-apt-
+    
     - name: Install Linux dependencies
       if: runner.os == 'Linux'
       run: |
@@ -73,12 +91,33 @@ jobs:
           patchelf \
           libjson-perl
     
+    - name: Cache Homebrew packages
+      if: runner.os == 'macOS'
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/Library/Caches/Homebrew
+          /opt/homebrew/Cellar
+        key: ${{ runner.os }}-brew-${{ hashFiles('.github/workflows/ci.yml') }}
+        restore-keys: |
+          ${{ runner.os }}-brew-
+    
     - name: Install macOS dependencies
       if: runner.os == 'macOS'
       run: |
         brew install bison cpanm ninja
         echo "/opt/homebrew/opt/bison/bin" >> $GITHUB_PATH
         cpanm install JSON
+    
+    - name: Cache build artifacts
+      uses: actions/cache@v4
+      with:
+        path: |
+          build
+          !build/_deps
+        key: ${{ runner.os }}-${{ matrix.build_type }}-build-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-${{ matrix.build_type }}-build-
     
     - name: Configure CMake
       run: |
