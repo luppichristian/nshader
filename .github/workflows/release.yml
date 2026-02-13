@@ -1,0 +1,211 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (e.g., v1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      tag: ${{ steps.get_tag.outputs.tag }}
+    
+    steps:
+    - name: Get tag
+      id: get_tag
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          echo "tag=${{ inputs.tag }}" >> $GITHUB_OUTPUT
+        else
+          echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.get_tag.outputs.tag }}
+        release_name: Release ${{ steps.get_tag.outputs.tag }}
+        draft: false
+        prerelease: ${{ contains(steps.get_tag.outputs.tag, '-alpha') || contains(steps.get_tag.outputs.tag, '-beta') || contains(steps.get_tag.outputs.tag, '-rc') }}
+
+  build-and-upload:
+    name: Build ${{ matrix.os }}
+    needs: create-release
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: nshader
+            asset_name: nshader-linux-x64
+          - os: windows-latest
+            artifact_name: nshader.exe
+            asset_name: nshader-windows-x64.exe
+          - os: macos-latest
+            artifact_name: nshader
+            asset_name: nshader-macos-x64
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    
+    - name: Set up CMake
+      uses: lukka/get-cmake@latest
+    
+    - name: Set up MSVC
+      if: runner.os == 'Windows'
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: x64
+    
+    - name: Set up Ninja
+      uses: seanmiddleditch/gha-setup-ninja@master
+    
+    - name: Cache CMake dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          build/_deps
+        key: ${{ runner.os }}-cmake-deps-${{ hashFiles('**/CMakeLists.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-cmake-deps-
+    
+    - name: Install Linux dependencies
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y \
+          build-essential \
+          pkg-config \
+          libasound2-dev \
+          libpulse-dev \
+          libaudio-dev \
+          libfribidi-dev \
+          libjack-dev \
+          libsndio-dev \
+          libx11-dev \
+          libxext-dev \
+          libxrandr-dev \
+          libxcursor-dev \
+          libxfixes-dev \
+          libxi-dev \
+          libxss-dev \
+          libxtst-dev \
+          libxkbcommon-dev \
+          libdrm-dev \
+          libgbm-dev \
+          libgl1-mesa-dev \
+          libgles2-mesa-dev \
+          libegl1-mesa-dev \
+          libdbus-1-dev \
+          libibus-1.0-dev \
+          libudev-dev \
+          libthai-dev \
+          libpipewire-0.3-dev \
+          libwayland-dev \
+          libdecor-0-dev \
+          patchelf \
+          libjson-perl
+    
+    - name: Install macOS dependencies
+      if: runner.os == 'macOS'
+      run: |
+        brew install bison cpanminus ninja || true
+        brew link --overwrite bison cpanminus ninja || true
+        export PATH="/opt/homebrew/opt/bison/bin:/opt/homebrew/bin:$PATH"
+        echo "/opt/homebrew/opt/bison/bin" >> $GITHUB_PATH
+        cpanm JSON
+    
+    - name: Configure CMake
+      run: |
+        cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DNSHADER_BUILD_TESTS=OFF -DNSHADER_BUILD_CLI=ON
+    
+    - name: Build
+      run: cmake --build build --config Release
+    
+    - name: Find executable (Windows)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      id: find_exe_win
+      run: |
+        $exe = Get-ChildItem -Path build -Filter "nshader.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($null -eq $exe) {
+          $exe = Get-ChildItem -Path build/bin -Filter "nshader.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+        }
+        if ($null -eq $exe) {
+          $exe = Get-ChildItem -Path build/Release -Filter "nshader.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+        }
+        if ($null -eq $exe) {
+          Write-Error "Could not find nshader.exe"
+          exit 1
+        }
+        $exePath = $exe.FullName
+        Write-Host "Found executable at: $exePath"
+        echo "exe_path=$exePath" >> $env:GITHUB_OUTPUT
+    
+    - name: Find executable (Unix)
+      if: runner.os != 'Windows'
+      id: find_exe_unix
+      run: |
+        exe=$(find build -name "nshader" -type f ! -name "*.a" ! -name "*.so" ! -name "*.dylib" | head -n 1)
+        if [ -z "$exe" ]; then
+          exe=$(find build/bin -name "nshader" -type f ! -name "*.a" ! -name "*.so" ! -name "*.dylib" | head -n 1)
+        fi
+        if [ -z "$exe" ]; then
+          echo "Could not find nshader executable"
+          exit 1
+        fi
+        echo "Found executable at: $exe"
+        echo "exe_path=$exe" >> $GITHUB_OUTPUT
+    
+    - name: Strip symbols (Unix)
+      if: runner.os != 'Windows'
+      run: |
+        strip ${{ steps.find_exe_unix.outputs.exe_path }}
+    
+    - name: Prepare artifact (Windows)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        Copy-Item "${{ steps.find_exe_win.outputs.exe_path }}" -Destination "${{ matrix.asset_name }}"
+    
+    - name: Prepare artifact (Unix)
+      if: runner.os != 'Windows'
+      run: |
+        cp "${{ steps.find_exe_unix.outputs.exe_path }}" "${{ matrix.asset_name }}"
+        chmod +x "${{ matrix.asset_name }}"
+    
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.create-release.outputs.upload_url }}
+        asset_path: ./${{ matrix.asset_name }}
+        asset_name: ${{ matrix.asset_name }}
+        asset_content_type: application/octet-stream
+    
+    - name: Upload artifact for debugging
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-artifacts-${{ matrix.os }}
+        path: |
+          build/
+          !build/_deps
