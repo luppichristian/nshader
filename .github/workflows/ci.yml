@@ -105,9 +105,11 @@ jobs:
     - name: Install macOS dependencies
       if: runner.os == 'macOS'
       run: |
-        brew install bison cpanm ninja
+        brew install bison cpanminus ninja || true
+        brew link --overwrite bison cpanminus ninja || true
+        export PATH="/opt/homebrew/opt/bison/bin:/opt/homebrew/bin:$PATH"
         echo "/opt/homebrew/opt/bison/bin" >> $GITHUB_PATH
-        cpanm install JSON
+        cpanm JSON
     
     - name: Cache build artifacts
       uses: actions/cache@v4
@@ -125,7 +127,52 @@ jobs:
     
     - name: Build
       run: cmake --build build
-    
+
+    - name: Diagnose DLL dependencies (Windows)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      working-directory: build
+      run: |
+        # Find all DLLs in the build tree and add their directories to PATH
+        $dllDirs = Get-ChildItem -Path . -Filter "*.dll" -Recurse |
+          Select-Object -ExpandProperty DirectoryName -Unique
+        foreach ($dir in $dllDirs) {
+          Write-Host "Adding DLL directory to PATH: $dir"
+          Add-Content -Path $env:GITHUB_PATH -Value $dir
+        }
+
+        # Check test executable dependencies
+        $testExe = "nshader-tests.exe"
+        if (Test-Path $testExe) {
+          Write-Host "`n=== DLL dependencies for $testExe ==="
+          $output = & dumpbin /dependents $testExe 2>&1 | Out-String
+          $dllNames = [regex]::Matches($output, '^\s+(\S+\.dll)\s*$', 'Multiline') |
+            ForEach-Object { $_.Groups[1].Value }
+
+          $missing = @()
+          foreach ($dll in $dllNames) {
+            $inPath = $null
+            try { $inPath = & where.exe $dll 2>$null } catch {}
+            $inBuild = Get-ChildItem -Path . -Filter $dll -Recurse -ErrorAction SilentlyContinue
+
+            if ($inPath) {
+              Write-Host "  [OK]    $dll"
+            } elseif ($inBuild) {
+              Write-Host "  [BUILD] $dll -> $($inBuild[0].FullName)"
+            } else {
+              Write-Host "  [MISSING] $dll"
+              $missing += $dll
+            }
+          }
+
+          if ($missing.Count -gt 0) {
+            Write-Host "`n::error::Missing DLLs: $($missing -join ', ')"
+            exit 1
+          } else {
+            Write-Host "`nAll DLL dependencies satisfied."
+          }
+        }
+
     - name: Run tests
       working-directory: build
       run: ctest --output-on-failure --verbose
