@@ -211,8 +211,8 @@ if(NSHADER_BUILD_TESTS)
             GIT_TAG v1.15.2
             GIT_SHALLOW TRUE
         )
-        # For Windows: Prevent overriding the parent project's compiler/linker settings
-        set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+        # For Windows: Use static runtime to match project settings
+        set(gtest_force_shared_crt OFF CACHE BOOL "" FORCE)
         FetchContent_MakeAvailable(googletest)
     endif()
 
@@ -228,22 +228,8 @@ if(NSHADER_BUILD_TESTS)
             GTest::gtest_main
     )
 
-    # On Windows, copy vendored DLLs to test executable directory
-    if(WIN32 AND NOT SDL3_shadercross_FOUND)
-        add_custom_command(TARGET nshader-tests POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "${CMAKE_BINARY_DIR}/_deps/sdl_shadercross-build/external/windows/x64/bin/dxcompiler.dll"
-                "${CMAKE_BINARY_DIR}/_deps/sdl_shadercross-build/external/windows/x64/bin/dxil.dll"
-                "${CMAKE_BINARY_DIR}/_deps/sdl_shadercross-build/external/windows/x64/bin/spirv-cross-c-sharedd.dll"
-                "$<TARGET_FILE_DIR:nshader-tests>"
-            COMMENT "Copying shader compiler DLLs for tests"
-        )
-    endif()
-
     include(GoogleTest)
-    gtest_discover_tests(nshader-tests
-        DISCOVERY_MODE POST_BUILD
-    )
+    gtest_discover_tests(nshader-tests)
 
     message(STATUS "Building tests with GoogleTest")
 endif()

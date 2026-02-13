@@ -121,7 +121,7 @@ jobs:
     
     - name: Configure CMake
       run: |
-        cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DNSHADER_BUILD_TESTS=ON
+        cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DNSHADER_BUILD_TESTS=ON -DNSHADER_BUILD_CLI=ON
     
     - name: Build
       run: cmake --build build
