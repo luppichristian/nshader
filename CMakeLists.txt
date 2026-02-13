@@ -228,8 +228,22 @@ if(NSHADER_BUILD_TESTS)
             GTest::gtest_main
     )
 
+    # On Windows, copy vendored DLLs to test executable directory
+    if(WIN32 AND NOT SDL3_shadercross_FOUND)
+        add_custom_command(TARGET nshader-tests POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${CMAKE_BINARY_DIR}/_deps/sdl_shadercross-build/external/windows/x64/bin/dxcompiler.dll"
+                "${CMAKE_BINARY_DIR}/_deps/sdl_shadercross-build/external/windows/x64/bin/dxil.dll"
+                "${CMAKE_BINARY_DIR}/_deps/sdl_shadercross-build/external/windows/x64/bin/spirv-cross-c-sharedd.dll"
+                "$<TARGET_FILE_DIR:nshader-tests>"
+            COMMENT "Copying shader compiler DLLs for tests"
+        )
+    endif()
+
     include(GoogleTest)
-    gtest_discover_tests(nshader-tests DISCOVERY_MODE PRE_TEST)
+    gtest_discover_tests(nshader-tests
+        DISCOVERY_MODE POST_BUILD
+    )
 
     message(STATUS "Building tests with GoogleTest")
 endif()
