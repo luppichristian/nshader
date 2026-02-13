@@ -229,7 +229,7 @@ if(NSHADER_BUILD_TESTS)
     )
 
     include(GoogleTest)
-    gtest_discover_tests(nshader-tests)
+    gtest_discover_tests(nshader-tests DISCOVERY_MODE PRE_TEST)
 
     message(STATUS "Building tests with GoogleTest")
 endif()
