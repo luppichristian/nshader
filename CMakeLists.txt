@@ -75,7 +75,7 @@ if(NSHADER_BUILD_COMPILER)
         FetchContent_Declare(
             SDL_shadercross
             GIT_REPOSITORY https://github.com/libsdl-org/SDL_shadercross.git
-            GIT_TAG 7b7365a86611b2a7b6462e521cf1c43a037d0970
+            GIT_TAG e55cf5e31ced6f3d1be5cc6d0c50e99384f9f4ba
             GIT_SHALLOW TRUE
         )
         FetchContent_MakeAvailable(SDL_shadercross)
