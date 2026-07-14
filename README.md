@@ -1,5 +1,11 @@
 # nshader
 
+[![Language](https://img.shields.io/badge/language-C11%20%2F%20C%2B%2B-00599C)](https://github.com/luppichristian/nshader)
+[![Build](https://img.shields.io/badge/build-CMake-orange)](https://github.com/luppichristian/nshader)
+[![Docs](https://img.shields.io/badge/docs-online-blue)](https://luppichristian.github.io/nshader/)
+[![CI](https://img.shields.io/github/actions/workflow/status/luppichristian/nshader/ci.yml?branch=main&label=ci)](https://github.com/luppichristian/nshader/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
 Cross-platform shader compiler and runtime library. Compiles HLSL shaders to multiple GPU backends (DXIL, DXBC, MSL, SPIR-V) and packages them with reflection metadata into a single binary format for runtime loading.
 
 Built on [SDL_shadercross](https://github.com/libsdl-org/SDL_shadercross) for shader compilation and cross-compilation.
