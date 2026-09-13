@@ -48,8 +48,7 @@ if(NOT SDL3_FOUND AND NSHADER_SDL3_FETCH)
     FetchContent_Declare(
         SDL3
         GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-        GIT_TAG main
-        GIT_SHALLOW TRUE
+        GIT_TAG b290793b78141d0131ff135d47cec0c095b807db
     )
     FetchContent_MakeAvailable(SDL3)
 endif()
@@ -75,8 +74,7 @@ if(NSHADER_BUILD_COMPILER)
         FetchContent_Declare(
             SDL_shadercross
             GIT_REPOSITORY https://github.com/libsdl-org/SDL_shadercross.git
-            GIT_TAG e55cf5e31ced6f3d1be5cc6d0c50e99384f9f4ba
-            GIT_SHALLOW TRUE
+            GIT_TAG 1ff05bec573988a98ef9e0260b4da44f512b8367
         )
         FetchContent_MakeAvailable(SDL_shadercross)
     endif()
