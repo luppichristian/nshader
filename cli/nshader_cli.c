@@ -212,6 +212,15 @@ typedef struct compile_args_t {
   bool disable_spv;
 } compile_args_t;
 
+static char* copy_string(const char* str) {
+  size_t size = strlen(str) + 1;
+  char* copy = (char*)malloc(size);
+  if (copy) {
+    memcpy(copy, str, size);
+  }
+  return copy;
+}
+
 static bool parse_define(const char* str, char** name, char** value) {
   const char* eq = strchr(str, '=');
   if (eq) {
@@ -220,9 +229,9 @@ static bool parse_define(const char* str, char** name, char** value) {
     memcpy(*name, str, name_len);
     (*name)[name_len] = '\0';
 
-    *value = strdup(eq + 1);
+    *value = copy_string(eq + 1);
   } else {
-    *name = strdup(str);
+    *name = copy_string(str);
     *value = NULL;
   }
   return true;
